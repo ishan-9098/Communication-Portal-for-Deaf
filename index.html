@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Speech to Text Conversion Portal for deaf people</title>
+    
+    <style>
+      body {
+        font-family: sans-serif;
+        background-color: #f7f7f7;
+      }
+      h1 {
+        text-align: center;
+        margin-top: 50px;
+        color: #333;
+      }
+      #start-button, #stop-button, #save-button  {
+        display: inline-block;
+        margin-top: 30px;
+        margin-left: 10px;
+        padding: 10px 20px;
+        font-size: 18px;
+        color: #fff;
+        background-color: #4CAF50;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+      #start-button:hover, #stop-button:hover #save-button:hover {
+        background-color: #3e8e41;
+      }
+      #speech-text {
+        display: block;
+        margin: 30px auto 0;
+        padding: 10px;
+        font-size: 16px;
+        width: 80%;
+        height: 200px;
+        resize: none;
+        border: none;
+        border-radius: 4px;
+        box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+      #button-container {
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Speech to Text Conversion Portal</h1>
+    <textarea id="speech-text" rows="10" cols="30" readonly></textarea>
+    <div id="button-container">
+      <select id="language-select">
+        <option value="en-US">English</option>
+        <option value="hi-IN">Hindi</option>
+      </select>
+      
+      <button id="start-button">Start</button>
+      <button id="stop-button" disabled>Stop</button>
+      <button id="save-button" disabled>Save</button>
+    </div>
+    
+    <script>
+      const startButton = document.querySelector("#start-button");
+      const stopButton = document.querySelector("#stop-button");
+      const speechText = document.querySelector("#speech-text");
+      const saveButton = document.querySelector("#save-button");
+      const output = document.getElementById("output");
+      const languageSelect = document.getElementById("language-select");
+      let recognition;
+    
+      startButton.addEventListener("click", startRecording);
+      stopButton.addEventListener("click", stopRecording);
+      saveButton.addEventListener("click", saveTextToFile);
+    
+      function startRecording() {
+        recognition = new (window.SpeechRecognition ||
+          window.webkitSpeechRecognition ||
+          window.mozSpeechRecognition ||
+          window.msSpeechRecognition)();
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 1;
+        recognition.continuous = true;
+        //recognition.lang = 'hi-IN';
+        //recognition.lang = 'en-US';
+        recognition.lang = languageSelect.value;
+        recognition.start();
+        startButton.disabled = true;
+        stopButton.disabled = false;
+        speechText.value = "";
+        recognition.addEventListener("result", handleResult);
+    
+        // 5 minutes
+        setTimeout(stopRecording, 300000);
+      }
+    
+      function stopRecording() {
+        recognition.stop();
+        startButton.disabled = false;
+        stopButton.disabled = true;
+        saveButton.disabled = false;
+      }
+    
+      function handleResult(event) {
+        const transcript = event.results[0][0].transcript;
+    
+        // Clear out previous content of speechText
+        speechText.value = "";
+    
+        // Append latest transcript to speechText
+        speechText.value += transcript + " ";
+        output.textContent += transcript;
+      }
+    
+      function saveTextToFile() {
+        const textToSave = speechText.value;
+        const fileNameToSaveAs = "output.txt";
+    
+        // Create a new blob and write the text to it
+        const blob = new Blob([textToSave], {type: "text/plain;charset=utf-8"});
+    
+        // Use FileSaver.js to save the blob as a file
+        saveAs(blob, fileNameToSaveAs);
+      }
+    </script>
+        
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js"></script>
+    
+  </body>
+</html>
